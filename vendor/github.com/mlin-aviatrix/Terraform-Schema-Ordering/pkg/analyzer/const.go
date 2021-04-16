@@ -23,4 +23,5 @@ var ordering = []string{
 	"RequiredWith",
 	"Deprecated",
 	"Removed",
+	"AtLeastOneOf", // Can't find in documentation but we are using in provider
 }

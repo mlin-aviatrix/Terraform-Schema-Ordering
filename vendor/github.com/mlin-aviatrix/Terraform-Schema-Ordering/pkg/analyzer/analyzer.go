@@ -91,35 +91,39 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		unary := result.(*ast.UnaryExpr)
 		compositeLit := unary.X.(*ast.CompositeLit)
 
-		selExpr := compositeLit.Type.(*ast.SelectorExpr)
-		// Only consider schema.Resource
-		if fmt.Sprintf("%s", selExpr.X) != "schema" || fmt.Sprintf("%s", selExpr.Sel) != "Resource" {
-			return
-		}
-		var schemaKeyValueExpr *ast.KeyValueExpr
-		for _, expr := range compositeLit.Elts {
-			keyValueExpr := expr.(*ast.KeyValueExpr)
-			// Only consider schema.Schema definition
-			if fmt.Sprintf("%s", keyValueExpr.Key) == "Schema" {
-				schemaKeyValueExpr = keyValueExpr
-				break
-			}
-		}
-		// Return if schema.Schema is not found
-		if schemaKeyValueExpr == nil {
-			return
-		}
-
-		// For each attribute, check the order of the fields
-		attributes := schemaKeyValueExpr.Value.(*ast.CompositeLit)
-		for _, expr := range attributes.Elts {
-			field := expr.(*ast.KeyValueExpr)
-			checkFieldOrder(field, pass)
-		}
-		return
+		parseResource(compositeLit, pass)
 	})
 
 	return nil, nil
+}
+
+func parseResource(compositeLit *ast.CompositeLit, pass *analysis.Pass) {
+	selExpr := compositeLit.Type.(*ast.SelectorExpr)
+	// Only consider schema.Resource
+	if fmt.Sprintf("%s", selExpr.X) != "schema" || fmt.Sprintf("%s", selExpr.Sel) != "Resource" {
+		return
+	}
+	var schemaKeyValueExpr *ast.KeyValueExpr
+	for _, expr := range compositeLit.Elts {
+		keyValueExpr := expr.(*ast.KeyValueExpr)
+		// Only consider schema.Schema definition
+		if fmt.Sprintf("%s", keyValueExpr.Key) == "Schema" {
+			schemaKeyValueExpr = keyValueExpr
+			break
+		}
+	}
+	// Return if schema.Schema is not found
+	if schemaKeyValueExpr == nil {
+		return
+	}
+
+	// For each attribute, check the order of the fields
+	attributes := schemaKeyValueExpr.Value.(*ast.CompositeLit)
+	for _, expr := range attributes.Elts {
+		field := expr.(*ast.KeyValueExpr)
+		checkFieldOrder(field, pass)
+	}
+	return
 }
 
 func checkFieldOrder(field *ast.KeyValueExpr, pass *analysis.Pass) {
@@ -163,6 +167,11 @@ func checkFieldOrder(field *ast.KeyValueExpr, pass *analysis.Pass) {
 		}
 
 		// Handle nested resource definitions
+		if key == "Elem" {
+			unary := keyValueExpr.Value.(*ast.UnaryExpr)
+			compositeLit := unary.X.(*ast.CompositeLit)
+			parseResource(compositeLit, pass)
+		}
 	}
 }
 

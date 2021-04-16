@@ -21,8 +21,8 @@ func dataSourceAviatrixFireNet() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"firenet_gw_name": {
 							Type:        schema.TypeString,
-							Computed:    true,
 							Description: "Name of the gateway to launch the firewall instance.",
+							Computed:    true,
 						},
 						"instance_id": {
 							Type:        schema.TypeString,
