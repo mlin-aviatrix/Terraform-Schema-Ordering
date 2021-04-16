@@ -163,7 +163,7 @@ func checkFieldOrder(field *ast.KeyValueExpr, pass *analysis.Pass) {
 			continue
 		} else {
 			name2 := ordering[indexes[index]]
-			pass.Reportf(keyValueExpr.Pos(), "schema ordering: %s should come before %s in resource schema definition", key, name2)
+			pass.Reportf(keyValueExpr.Pos(), "%s should come before %s", key, name2)
 		}
 
 		// Handle nested resource definitions
